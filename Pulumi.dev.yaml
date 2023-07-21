@@ -1,0 +1,5 @@
+config:
+  aws-native:region: eu-west-2
+  infra:infraBucket:
+    dataClassification: confidential
+    prefix: zombix-infra
