@@ -22,7 +22,7 @@ func main() {
 
 		// Create the zombix infrastructure bucket
 		infraBucketConfig := common.Bucket{
-			Prefix: "zombix-infra",
+			Prefix: fmt.Sprintf("%s-infra", common.BucketPrefix),
 		}
 
 		cfg.RequireObject("infraBucket", &infraBucketConfig)
