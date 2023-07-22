@@ -1,0 +1,11 @@
+config:
+  aws:region: eu-west-1
+  core:environment:
+    description: Development environment in Ireland
+    name: dev
+  core:infraBucket:
+    dataClassification: confidential
+  core:region:
+    id: eu-west-1
+    name: ireland
+    shortName: ire

@@ -1,0 +1,7 @@
+config:
+  aws-native:region: eu-west-2
+  core:environment:
+    name: dev
+    description: Development environment
+  core:infraBucket:
+    dataClassification: confidential

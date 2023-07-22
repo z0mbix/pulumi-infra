@@ -1,0 +1,4 @@
+config:
+  aws-native:region: eu-west-1
+  core:infraBucket:
+    dataClassification: confidential
