@@ -1,0 +1,3 @@
+name: nodes
+runtime: go
+description: Generic nodes on EC2

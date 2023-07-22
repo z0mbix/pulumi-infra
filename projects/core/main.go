@@ -4,29 +4,11 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"common"
+
 	"github.com/pulumi/pulumi-aws/sdk/v5/go/aws/s3"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
-)
-
-type Environment struct {
-	Name        string
-	Description string
-}
-
-type InfraBucket struct {
-	Name               string
-	Prefix             string
-	DataClassification DataClassification
-}
-
-type DataClassification string
-
-const (
-	CONFIDENTIAL DataClassification = "confidential"
-	PUBLIC       DataClassification = "public"
-	RESTRICTED   DataClassification = "restricted"
-	SENSITIVE    DataClassification = "sensitive"
 )
 
 func main() {
@@ -35,19 +17,19 @@ func main() {
 		cfg := config.New(ctx, "")
 
 		// Setup the environment
-		var env Environment
+		var env common.Environment
 		cfg.RequireObject("environment", &env)
 
 		// Create the zombix infrastructure bucket
-		infraBucket := InfraBucket{
+		infraBucketConfig := common.Bucket{
 			Prefix: "zombix-infra",
 		}
 
-		cfg.RequireObject("infraBucket", &infraBucket)
-		infraBucket.Name = fmt.Sprintf("%s-%s", infraBucket.Prefix, stackName)
+		cfg.RequireObject("infraBucket", &infraBucketConfig)
+		infraBucketConfig.Name = fmt.Sprintf("%s-%s", infraBucketConfig.Prefix, stackName)
 
 		bucket, err := s3.NewBucket(ctx, "infrastructure-bucket", &s3.BucketArgs{
-			Bucket: pulumi.String(infraBucket.Name),
+			Bucket: pulumi.String(infraBucketConfig.Name),
 			Acl:    pulumi.String("private"),
 			ServerSideEncryptionConfiguration: &s3.BucketServerSideEncryptionConfigurationArgs{
 				Rule: &s3.BucketServerSideEncryptionConfigurationRuleArgs{
@@ -57,9 +39,9 @@ func main() {
 				},
 			},
 			Tags: pulumi.StringMap{
-				"DataClassification": pulumi.String(infraBucket.DataClassification),
+				"DataClassification": pulumi.String(infraBucketConfig.DataClassification),
 				"EnvironmentName":    pulumi.String(env.Name),
-				"Name":               pulumi.String(infraBucket.Name),
+				"Name":               pulumi.String(infraBucketConfig.Name),
 			},
 		})
 		if err != nil {
@@ -67,13 +49,13 @@ func main() {
 		}
 
 		// Upload Ubuntu userdata shell script to infrastructure bucket
-		userDataFilePath := "../userdata/ubuntu.sh"
+		userDataFilePath := "../../userdata/ubuntu.sh"
 		userDataContent, err := ioutil.ReadFile(userDataFilePath)
 		if err != nil {
 			return err
 		}
 
-		_, err = s3.NewBucketObject(ctx, "fileObject", &s3.BucketObjectArgs{
+		userData, err := s3.NewBucketObject(ctx, "userDataUbuntu", &s3.BucketObjectArgs{
 			Bucket:  bucket.ID(),
 			Key:     pulumi.String("userdata/ubuntu.sh"),
 			Content: pulumi.String(string(userDataContent)),
@@ -85,6 +67,7 @@ func main() {
 		// Exports
 		ctx.Export("bucketName", bucket.ID())
 		ctx.Export("bucketArn", bucket.Arn)
+		ctx.Export("userData", pulumi.Sprintf("s3://%s/%s", bucket.ID(), userData.Key))
 
 		return nil
 	})
