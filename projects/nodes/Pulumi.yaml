@@ -1,3 +1,7 @@
 name: nodes
 runtime: go
 description: Generic nodes on EC2
+
+config:
+  instanceType: t3.micro
+  sshKeypairName: zombix
